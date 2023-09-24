@@ -1,73 +1,81 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+Bazar-Ecommerce Nest.js Project
+Project Description: This project is an e-commerce platform built with Nest.js, PostgreSQL, Cloudinary for image uploads, and features authentication and authorization. Admin users have the ability to manage products and categories.
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Table of Contents
+Overview
+Features
+Prerequisites
+Getting Started
+Usage
+Authentication and Authorization
+Cloudinary Integration
+API Endpoints
+Database
+Contributing
+License
+Overview
+This e-commerce platform provides a complete solution for online shopping. It offers a products, secure authentication, role-based authorization, and a seamless shopping experience.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Features
+User registration and authentication.
+Role-based authorization with admin capabilities.
+Product and category management for admin users.
+Cloudinary integration for image uploads.
+Secure API endpoints for shopping and product management.
+Prerequisites
+Before you begin, ensure you have met the following requirements:
 
-## Description
+Node.js and npm installed.
+PostgreSQL database.
+Cloudinary account with API credentials.
+Getting Started
+To get started, follow these steps:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+bash
+Copy code
+# Clone the repository
+git clone https://github.com/yourusername/ecommerce-nestjs.git
 
-## Installation
+# Navigate to the project directory
+cd ecommerce-nestjs
 
-```bash
-$ npm install
-```
+# Install dependencies
+npm install
 
-## Running the app
+# Configure environment variables
+# Create a .env file and add the following:
+#   - DATABASE_URL: Your PostgreSQL database connection URL
+#   - CLOUDINARY_CLOUD_NAME: Your Cloudinary cloud name
+#   - CLOUDINARY_API_KEY: Your Cloudinary API key
+#   - CLOUDINARY_API_SECRET: Your Cloudinary API secret
+#   - JWT_SECRET: Your JWT secret for authentication
 
-```bash
-# development
-$ npm run start
+# Run database migrations
+npm run migrate
 
-# watch mode
-$ npm run start:dev
+# Start the development server
+npm run start:dev
+Save to grepper
+Usage
+Visit the application in your browser and explore the shopping experience.
+Admin users can access the admin dashboard to manage products and categories.
+Authentication and Authorization
+Users can register and log in to access their accounts.
+Admin users are created manually and granted admin privileges in the database.
+Cloudinary Integration
+Images are uploaded to Cloudinary for product displays.
+Ensure you have a Cloudinary account and provide the necessary credentials in the environment variables.
+API Endpoints
+The API provides various endpoints for managing products, categories, and user accounts.
+Refer to the API documentation for details on available endpoints.
+Database
+The project uses a PostgreSQL database.
+Run npm run migrate to create the database schema.
+Contributing
+We welcome contributions! Please follow our contribution guidelines and report any issues on the issue tracker.
 
-# production mode
-$ npm run start:prod
-```
+License
+This project is licensed under the MIT License - see the LICENSE.md file for details.
 
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+Acknowledgments
+We would like to thank the Nest.js and PostgreSQL communities for their excellent documentation and support.
