@@ -12,13 +12,15 @@ import { LoginUserDto } from '../dto/login-user.dto';
 import { JwtPayload } from '../../utils/jwt/jwt-payload';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { AuditService } from 'src/audit/audit.services';
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     private readonly   jwtService:JwtService,
-    private readonly   configService:ConfigService
+    private readonly   configService:ConfigService,
+    private readonly auditService: AuditService,
   ) {}
   //Register
   async signup(body: SignupDto) {
@@ -31,7 +33,7 @@ export class UserService {
   }
 
   //Login
-  async signIn(body: LoginUserDto) {
+  async signIn(body: LoginUserDto,clientIp: string) {
     const { email, password } = body;
     const user = await this.findUserByEmail(email);
     if (!user) throw new ConflictException('Invalid email or password');
@@ -50,14 +52,14 @@ export class UserService {
       secret, 
       expiresIn: '1h',
     });
-
+    this.auditService.logUserLogin(user.id, clientIp);
     return { accessToken, user };
   }
 //Find Users
 async findAllUsers(){
  return await this.userRepository.find()
 }
-async findUserById(id): Promise<any> {
+async findUserById(id:number): Promise<UserEntity> {
   return await  this.userRepository.findOne({where:{id}})
 
 }

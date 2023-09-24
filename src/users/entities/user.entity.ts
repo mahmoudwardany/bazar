@@ -1,4 +1,5 @@
 import { CategoriesEntity } from 'src/categories/entities/category.entity';
+import { OrderEntity } from 'src/orders/entities/order.entity';
 import { ProductEntity } from 'src/products/entities/product.entity';
 import { Roles } from 'src/utils/common/Roles.enum';
 import {
@@ -28,4 +29,6 @@ export class UserEntity {
   @OneToMany(() => CategoriesEntity, (cat) => cat.createdBy)
   @OneToMany(() => CategoriesEntity, (cat) => cat.createdBy)
   category: CategoriesEntity[];
+  @OneToMany(() => OrderEntity, (order) => order.updatedBy)
+  order: OrderEntity;
 }

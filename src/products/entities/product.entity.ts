@@ -1,10 +1,12 @@
 import { CategoriesEntity } from 'src/categories/entities/category.entity';
+import { OrderProductsEntity } from 'src/orders/entities/order-product.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   Timestamp,
   UpdateDateColumn,
@@ -30,12 +32,14 @@ export class ProductEntity {
   createdAt: Timestamp;
   @UpdateDateColumn()
   updatedAt: Timestamp;
-  @ManyToOne(() => UserEntity, (user) => user.products)
-  createdBy: UserEntity;
-  @ManyToOne(() => CategoriesEntity, (cat) => cat.products)
-  category: CategoriesEntity;
   @Column({ default: 2 })
   userId: number;
   @Column({ nullable: true })
   categoryId: number;
+  @ManyToOne(() => UserEntity, (user) => user.products)
+  createdBy: UserEntity;
+  @ManyToOne(() => CategoriesEntity, (cat) => cat.products)
+  category: CategoriesEntity;
+  @OneToMany(() => OrderProductsEntity, (op) => op.product)
+  products: OrderProductsEntity[];
 }

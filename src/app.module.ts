@@ -13,6 +13,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { typeOrmCOnfig } from './config/DB.config';
 import { CurrentUserMiddleware } from './utils/middleware/currentUser.middleware';
 import * as cloudinary from 'cloudinary';
+import { AuditModule } from './audit/audit.module';
 @Module({
   imports: [
     UsersModule,
@@ -21,6 +22,7 @@ import * as cloudinary from 'cloudinary';
     OrdersModule,
     TypeOrmModule.forRoot(typeOrmCOnfig),
     ConfigModule,
+    AuditModule,
   ],
   providers: [ConfigService],
 })
