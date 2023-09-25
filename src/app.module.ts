@@ -14,6 +14,8 @@ import { typeOrmCOnfig } from './config/DB.config';
 import { CurrentUserMiddleware } from './utils/middleware/currentUser.middleware';
 import * as cloudinary from 'cloudinary';
 import { AuditModule } from './audit/audit.module';
+import { CompressionMiddleware } from './utils/middleware/compression.middleware';
+import { ThrottlerModule } from '@nestjs/throttler';
 @Module({
   imports: [
     UsersModule,
@@ -23,16 +25,21 @@ import { AuditModule } from './audit/audit.module';
     TypeOrmModule.forRoot(typeOrmCOnfig),
     ConfigModule,
     AuditModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 10,
+      },
+    ]),
   ],
   providers: [ConfigService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(CurrentUserMiddleware)
+      .apply(CurrentUserMiddleware, CompressionMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
-
   constructor(private configService: ConfigService) {
     const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME');
     const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY');

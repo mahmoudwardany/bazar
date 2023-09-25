@@ -9,6 +9,8 @@ import {
   UploadedFile,
   UseGuards,
   Put,
+  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ProductsService } from '../services/products.service';
 import { CreateProductDto } from '../dto/create-product.dto';
@@ -19,6 +21,7 @@ import { CurrentUser } from 'src/utils/decorators/currentUser.decorator';
 import { AuthenticationGuard } from 'src/utils/guard/auth.guard';
 import { AuthorizedGuard } from 'src/utils/guard/authorized-role.guard';
 import { Roles } from 'src/utils/common/Roles.enum';
+import { ProductEntity } from '../entities/product.entity';
 
 @Controller('products')
 export class ProductsController {
@@ -39,8 +42,11 @@ export class ProductsController {
   }
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  async findAll(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ): Promise<ProductEntity[]> {
+    return this.productsService.findAll(page, limit);
   }
 
   @Get(':id')

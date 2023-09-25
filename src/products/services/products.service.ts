@@ -101,8 +101,17 @@ export class ProductsService {
 
     return product;
   }
-  async findAll() {
-    return await this.productRepository.find();
+
+  async findAll(page?: number, limit?: number): Promise<ProductEntity[]> {
+    if (page && limit) {
+      const skip = (page - 1) * limit;
+      return await this.productRepository.find({
+        skip: skip,
+        take: limit,
+      });
+    } else {
+      return await this.productRepository.find();
+    }
   }
   async update(id: number, updateProductDto: UpdateProductDto) {
     const product = await this.findOne(id);
