@@ -10,7 +10,6 @@ import {
   UseGuards,
   Put,
   Query,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { ProductsService } from '../services/products.service';
 import { CreateProductDto } from '../dto/create-product.dto';

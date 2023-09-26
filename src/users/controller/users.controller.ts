@@ -15,7 +15,6 @@ import { UserService } from '../services/users.service';
 import { AuthenticationGuard } from 'src/utils/guard/auth.guard';
 import { AuthorizedGuard } from 'src/utils/guard/authorized-role.guard';
 import { Roles } from 'src/utils/common/Roles.enum';
-import { CurrentUser } from 'src/utils/decorators/currentUser.decorator';
 
 @Controller('user')
 export class UserController {

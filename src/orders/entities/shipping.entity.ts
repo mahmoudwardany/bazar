@@ -1,5 +1,12 @@
 /* eslint-disable prettier/prettier */
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+// shipping.entity.ts
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { OrderEntity } from './order.entity';
 
 @Entity({ name: 'shipping' })
@@ -8,15 +15,17 @@ export class ShippingEntity {
   id: number;
 
   @Column()
-  phone: number;
+  phone: string;
+
+  @Column()
+  name: string;
 
   @Column()
   address: string;
 
   @Column()
   city: string;
-
   @OneToOne(() => OrderEntity, (order) => order.shippingAddress)
-  order: OrderEntity; 
+  @JoinColumn()
+  order: OrderEntity;
 }
-

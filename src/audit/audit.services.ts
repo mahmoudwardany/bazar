@@ -10,7 +10,7 @@ export class AuditService {
     this.logger.log(`User ${userId} logged in from IP ${ipAddress}`);
   }
 
-  logOrderPlacement(userId: number, orderId: string) {
+  logOrderPlacement(userId: number, orderId: number) {
     this.logger.log(`User ${userId} placed an order (Order ID: ${orderId})`);
   }
 }

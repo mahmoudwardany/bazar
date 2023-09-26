@@ -27,8 +27,9 @@ export class UserEntity {
   createdAt: Timestamp;
   products: ProductEntity[];
   @OneToMany(() => CategoriesEntity, (cat) => cat.createdBy)
-  @OneToMany(() => CategoriesEntity, (cat) => cat.createdBy)
   category: CategoriesEntity[];
   @OneToMany(() => OrderEntity, (order) => order.updatedBy)
-  order: OrderEntity;
+  orderUpdatedBy: OrderEntity;
+  @OneToMany(() => OrderEntity, (order) => order.user)
+  orders: OrderEntity[];
 }

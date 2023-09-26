@@ -141,4 +141,8 @@ export class ProductsService {
       product: deletedProduct,
     };
   }
+
+  remove(id: number) {
+    return `This action removes order #${id}`;
+  }
 }
