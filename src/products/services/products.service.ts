@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import * as cloudinary from 'cloudinary';
@@ -7,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CategoriesEntity } from 'src/categories/entities/category.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
+import { OrderStatus } from 'src/utils/common/order.enum';
 
 @Injectable()
 export class ProductsService {
@@ -144,5 +149,22 @@ export class ProductsService {
 
   remove(id: number) {
     return `This action removes order #${id}`;
+  }
+  async updateStock(id: number, stockChange: number, status: string) {
+    try {
+      const product = await this.findOne(id);
+      if (status === OrderStatus.DELIVERED) {
+        product.stock -= stockChange;
+      } else {
+        product.stock += stockChange;
+      }
+      await this.productRepository.save(product);
+      return product;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to update product stock',
+        error.message,
+      );
+    }
   }
 }

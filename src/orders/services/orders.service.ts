@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -14,6 +15,8 @@ import { AuditService } from 'src/audit/audit.services';
 import { ShippingEntity } from '../entities/shipping.entity';
 import { ProductsService } from 'src/products/services/products.service';
 import { OrderProductDto } from '../dto/order-product.dto';
+import { OrderStatus } from 'src/utils/common/order.enum';
+import { UpdateOrderStatus } from '../dto/update-order-status.dto';
 
 @Injectable()
 export class OrdersService {
@@ -27,12 +30,9 @@ export class OrdersService {
     private readonly productServices: ProductsService,
   ) {}
 
-  async createOrder(
-    createOrderDto: CreateOrderDto,
-    user: UserEntity,
-  ): Promise<OrderEntity> {
+  async createOrder(createOrderDto: CreateOrderDto, user: UserEntity) {
     try {
-      const shippingEntity = new ShippingEntity(); // Create a new ShippingEntity instance
+      const shippingEntity = new ShippingEntity();
       shippingEntity.phone = createOrderDto.shippingAddress.phone;
       shippingEntity.name = createOrderDto.shippingAddress.name;
       shippingEntity.address = createOrderDto.shippingAddress.address;
@@ -41,6 +41,7 @@ export class OrdersService {
       const order = new OrderEntity();
       order.user = user;
       order.shippingAddress = shippingEntity;
+      order.shippedAt = null;
       order.products = [];
 
       const orderProducts: OrderProductDto[] = createOrderDto.orderProducts;
@@ -51,7 +52,7 @@ export class OrdersService {
 
         const orderProduct = new OrderProductsEntity();
         orderProduct.order_quantity = productDto.order_quantity;
-        orderProduct.productId = product.id;
+        orderProduct.product = product;
         const productPrice = product.price;
         const priceTotal = productPrice * orderProduct.order_quantity;
         totalOrderPrice += priceTotal;
@@ -67,8 +68,9 @@ export class OrdersService {
         },
       );
       this.auditService.logOrderPlacement(user.id, order.id);
+      const savedOrder = await this.findOne(order.id);
 
-      return order;
+      return { savedOrder, totalPrice: order.total_price };
     } catch (error) {
       throw new InternalServerErrorException(
         'Failed to create the order',
@@ -96,9 +98,101 @@ export class OrdersService {
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.shippingAddress', 'shippingAddress')
       .leftJoinAndSelect('order.user', 'user')
+      .addSelect(['user.username', 'user.email'])
       .leftJoinAndSelect('order.products', 'products')
+      .leftJoin('products.product', 'product')
+      .addSelect(['product.id', 'product.title', 'product.price'])
       .where('order.id = :id', { id })
       .getOne();
+  }
+  async updateOrderStatus(
+    id: number,
+    updateOrderDto: UpdateOrderStatus,
+    user: UserEntity,
+  ) {
+    try {
+      const order = await this.findOne(id);
+
+      if (!order) {
+        throw new NotFoundException(`Order with ID ${id} not found.`);
+      }
+
+      if (
+        order.status === OrderStatus.DELIVERED ||
+        order.status === OrderStatus.CANCELLED
+      ) {
+        throw new BadRequestException(`Order is already ${order.status}`);
+      }
+
+      if (
+        order.status === OrderStatus.PROCESSING &&
+        updateOrderDto.status !== OrderStatus.SHIPPED
+      ) {
+        throw new BadRequestException(
+          `Cannot mark as Shipped before Processing.`,
+        );
+      }
+
+      if (updateOrderDto.status === OrderStatus.SHIPPED) {
+        order.shippedAt = new Date();
+      }
+
+      if (updateOrderDto.status === OrderStatus.DELIVERED) {
+        order.orderAt = new Date();
+      }
+
+      order.status = updateOrderDto.status;
+      order.updatedBy = user;
+
+      await this.orderRepository.save(order);
+
+      if (updateOrderDto.status === OrderStatus.DELIVERED) {
+        await this.updateProductStock(order, OrderStatus.DELIVERED);
+      }
+
+      return order;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to update order status',
+        error.message,
+      );
+    }
+  }
+
+  async updateProductStock(order: OrderEntity, status: OrderStatus) {
+    try {
+      for (const op of order.products) {
+        await this.productServices.updateStock(
+          op.product.id,
+          op.order_quantity,
+          status,
+        );
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to update product stock',
+        error.message,
+      );
+    }
+  }
+
+  async cancelOrder(id: number, user: UserEntity) {
+    const order = await this.findOne(id);
+    if (!order) {
+      throw new NotFoundException(`Order Not Found with id : ${id}`);
+    }
+
+    if (order.status === OrderStatus.CANCELLED) {
+      return order;
+    }
+
+    order.updatedBy = user;
+    order.status = OrderStatus.CANCELLED;
+
+    await this.orderRepository.save(order);
+    await this.updateProductStock(order, OrderStatus.CANCELLED);
+
+    return order;
   }
 
   remove(id: number) {

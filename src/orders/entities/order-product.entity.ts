@@ -12,6 +12,4 @@ export class OrderProductsEntity {
     order:OrderEntity;
     @ManyToOne(()=>ProductEntity,(prod)=>prod.products,{cascade:true})
     product:ProductEntity
-    @Column({ type: 'int' })
-    productId: number;
 }

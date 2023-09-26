@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { CategoriesEntity } from 'src/categories/entities/category.entity';
 import { OrderEntity } from 'src/orders/entities/order.entity';
 import { ProductEntity } from 'src/products/entities/product.entity';
@@ -20,6 +21,7 @@ export class UserEntity {
   @Column({ unique: true })
   email: string;
   @Column()
+  @Exclude()
   password: string;
   @Column({ type: 'enum', enum: Roles, array: true, default: [Roles.USER] })
   roles: Roles[];

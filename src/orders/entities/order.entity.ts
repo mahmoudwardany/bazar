@@ -19,9 +19,9 @@ export class OrderEntity {
   id: number;
   @CreateDateColumn()
   orderAt: Date;
-  @CreateDateColumn()
+  @CreateDateColumn({ default: null })
   shippedAt: Date;
-  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PROCCESSING })
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PROCESSING })
   status: string;
   @Column({ type: 'decimal', precision: 10, default: 0, scale: 2 })
   total_price: number;
