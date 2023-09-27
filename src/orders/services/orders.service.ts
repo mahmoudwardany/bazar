@@ -31,36 +31,35 @@ export class OrdersService {
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto, user: UserEntity) {
+    const shippingEntity = new ShippingEntity();
+    shippingEntity.phone = createOrderDto.shippingAddress.phone;
+    shippingEntity.name = createOrderDto.shippingAddress.name;
+    shippingEntity.address = createOrderDto.shippingAddress.address;
+    shippingEntity.city = createOrderDto.shippingAddress.city;
+
+    const order = new OrderEntity();
+    order.user = user;
+    order.shippingAddress = shippingEntity;
+    order.shippedAt = null;
+    order.products = [];
+
+    const orderProducts: OrderProductDto[] = createOrderDto.orderProducts;
+    let totalOrderPrice = 0;
+
+    for (const productDto of orderProducts) {
+      const product = await this.findProductById(productDto.productId);
+
+      const orderProduct = new OrderProductsEntity();
+      orderProduct.order_quantity = productDto.order_quantity;
+      orderProduct.product = product;
+      const productPrice = product.price;
+      const priceTotal = productPrice * orderProduct.order_quantity;
+      totalOrderPrice += priceTotal;
+      order.products.push(orderProduct);
+    }
+
+    order.total_price = totalOrderPrice;
     try {
-      const shippingEntity = new ShippingEntity();
-      shippingEntity.phone = createOrderDto.shippingAddress.phone;
-      shippingEntity.name = createOrderDto.shippingAddress.name;
-      shippingEntity.address = createOrderDto.shippingAddress.address;
-      shippingEntity.city = createOrderDto.shippingAddress.city;
-
-      const order = new OrderEntity();
-      order.user = user;
-      order.shippingAddress = shippingEntity;
-      order.shippedAt = null;
-      order.products = [];
-
-      const orderProducts: OrderProductDto[] = createOrderDto.orderProducts;
-      let totalOrderPrice = 0;
-
-      for (const productDto of orderProducts) {
-        const product = await this.findProductById(productDto.productId);
-
-        const orderProduct = new OrderProductsEntity();
-        orderProduct.order_quantity = productDto.order_quantity;
-        orderProduct.product = product;
-        const productPrice = product.price;
-        const priceTotal = productPrice * orderProduct.order_quantity;
-        totalOrderPrice += priceTotal;
-        order.products.push(orderProduct);
-      }
-
-      order.total_price = totalOrderPrice;
-
       await this.entityManager.transaction(
         async (transactionalEntityManager) => {
           await transactionalEntityManager.save(ShippingEntity, shippingEntity);
@@ -72,6 +71,8 @@ export class OrdersService {
 
       return { savedOrder, totalPrice: order.total_price };
     } catch (error) {
+      this.auditService.failedOrder(user.id, order.id, error, error.stack);
+
       throw new InternalServerErrorException(
         'Failed to create the order',
         error.message,

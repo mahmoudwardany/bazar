@@ -36,10 +36,9 @@ export class UserService {
   async signIn(body: LoginUserDto,clientIp: string) {
     const { email, password } = body;
     const user = await this.findUserByEmail(email);
-    if (!user) throw new ConflictException('Invalid email or password');
-    const matchedPassword = await this.comparePassword(password, user.password);
-    if (!matchedPassword)
+    if (!user || !(await this.comparePassword(password, user.password))) {
       throw new ConflictException('Invalid email or password');
+    }
     delete user.password;
     const payload: JwtPayload = {
       username: user.username,
@@ -52,8 +51,12 @@ export class UserService {
       secret, 
       expiresIn: '1h',
     });
-    this.auditService.logUserLogin(user.id, clientIp);
-    return { accessToken, user };
+try {
+  this.auditService.logUserLogin(user.id, clientIp);
+  return { accessToken, user };
+} catch (error) {
+  this.auditService.failedLogUserLogin(user.id, error,error.stack);
+}
   }
 //Find Users
 async findAllUsers(){
@@ -65,7 +68,7 @@ async findUserById(id:number): Promise<UserEntity> {
 }
   //helpers
   async findUserByEmail(email: string) {
-    return await this.userRepository.findOneBy({ email });
+    return this.userRepository.findOne({ where: { email } });
   }
   //hash Password
   async hashPassword(password: string) {
