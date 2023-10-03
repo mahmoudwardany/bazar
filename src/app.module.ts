@@ -23,7 +23,9 @@ import { ThrottlerModule } from '@nestjs/throttler';
     CategoriesModule,
     OrdersModule,
     TypeOrmModule.forRoot(typeOrmCOnfig),
-    ConfigModule,
+      ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     AuditModule,
     ThrottlerModule.forRoot([
       {
