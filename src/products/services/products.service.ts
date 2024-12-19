@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -12,14 +13,14 @@ import { Repository } from 'typeorm';
 import { CategoriesEntity } from 'src/categories/entities/category.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { OrderStatus } from 'src/utils/common/order.enum';
+import { CategoriesService } from 'src/categories/services/categories.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(ProductEntity)
     private readonly productRepository: Repository<ProductEntity>,
-    @InjectRepository(CategoriesEntity)
-    private readonly categoriesRepository: Repository<CategoriesEntity>,
+    private readonly categoriesService: CategoriesService,
   ) {}
   async createProduct(
     createProductDto: CreateProductDto,
@@ -27,11 +28,14 @@ export class ProductsService {
     currentUser: UserEntity,
   ) {
     try {
-      const categoryId = +createProductDto.categoryId;
-      const category = await this.findCategoryById(categoryId);
+      const category = await this.categoriesService.findCategoryById(
+        +createProductDto.categoryId,
+      );
+
       const { secure_url, public_id } = await this.uploadProductImage(
         productImage,
       );
+
       const newProduct = this.createProductEntity(
         createProductDto,
         category,
@@ -42,20 +46,11 @@ export class ProductsService {
 
       return await this.saveProduct(newProduct);
     } catch (error) {
-      return error;
+      throw new InternalServerErrorException(
+        'Failed to create product',
+        error.message,
+      );
     }
-  }
-
-  private async findCategoryById(categoryId: number) {
-    const category = await this.categoriesRepository.findOne({
-      where: { id: categoryId },
-    });
-
-    if (!category) {
-      throw new NotFoundException(`Category with ID ${categoryId} not found`);
-    }
-
-    return category;
   }
 
   private async uploadProductImage(imageFile: Express.Multer.File) {
@@ -79,21 +74,23 @@ export class ProductsService {
     currentUser: UserEntity,
     productImageUrl: string,
     imagePublicId: string,
-  ) {
-    const newProduct = new ProductEntity();
-    newProduct.title = createProductDto.title;
-    newProduct.description = createProductDto.description;
-    newProduct.price = createProductDto.price;
-    newProduct.stock = createProductDto.stock;
-    newProduct.category = category;
-    newProduct.createdBy = currentUser;
-    newProduct.productImage = productImageUrl;
-    newProduct.imagePublicId = imagePublicId;
-    return newProduct;
+  ): ProductEntity {
+    return this.productRepository.create({
+      title: createProductDto.title,
+      description: createProductDto.description,
+      price: createProductDto.price,
+      stock: createProductDto.stock,
+      category,
+      createdBy: currentUser,
+      productImage: productImageUrl,
+      imagePublicId,
+    });
   }
+
   async saveProduct(product: ProductEntity) {
     return await this.productRepository.save(product);
   }
+
   async findOne(id: number) {
     const product = await this.productRepository.findOne({
       where: { id },
@@ -107,59 +104,58 @@ export class ProductsService {
     return product;
   }
 
-  async findAll(page?: number, limit?: number): Promise<ProductEntity[]> {
-    if (page && limit) {
-      const skip = (page - 1) * limit;
-      return await this.productRepository.find({
-        skip: skip,
-        take: limit,
-      });
-    } else {
-      return await this.productRepository.find();
-    }
+  async findAll(page = 1, limit = 10): Promise<ProductEntity[]> {
+    const skip = (page - 1) * limit;
+    return await this.productRepository.find({
+      skip,
+      take: limit,
+    });
   }
+
   async update(id: number, updateProductDto: UpdateProductDto) {
     const product = await this.findOne(id);
-    for (const key in updateProductDto) {
-      if (
-        updateProductDto.hasOwnProperty(key) &&
-        updateProductDto[key] !== undefined
-      ) {
-        if (key === 'categoryId') {
-          const category = await this.findCategoryById(updateProductDto[key]);
-          product.category = category;
-        } else {
-          product[key] = updateProductDto[key];
-        }
-      }
+
+    if (updateProductDto.categoryId) {
+      const category = await this.categoriesService.findCategoryById(
+        updateProductDto.categoryId,
+      );
+      product.category = category; // تحديث الفئة
     }
-    return await this.productRepository.save(product);
+
+    Object.keys(updateProductDto).forEach((key) => {
+      if (key !== 'categoryId' && updateProductDto[key] !== undefined) {
+        product[key] = updateProductDto[key];
+      }
+    });
+
+    return this.productRepository.save(product);
   }
+
   async delete(id: number) {
     const product = await this.findOne(id);
     if (product.imagePublicId) {
       await cloudinary.v2.uploader.destroy(product.imagePublicId);
     }
-    const deletedProduct = await this.productRepository.remove(product);
+    await this.productRepository.remove(product);
     return {
       message: `Product Deleted Sucessfully with Id : ${id}`,
-      product: deletedProduct,
     };
   }
 
-  remove(id: number) {
-    return `This action removes order #${id}`;
-  }
   async updateStock(id: number, stockChange: number, status: string) {
     try {
       const product = await this.findOne(id);
-      if (status === OrderStatus.DELIVERED) {
-        product.stock -= stockChange;
-      } else {
-        product.stock += stockChange;
+
+      const stockAdjustment =
+        status === OrderStatus.DELIVERED ? -stockChange : stockChange;
+
+      if (product.stock + stockAdjustment < 0) {
+        throw new BadRequestException('Insufficient stock available');
       }
-      await this.productRepository.save(product);
-      return product;
+
+      product.stock += stockAdjustment;
+
+      return await this.productRepository.save(product);
     } catch (error) {
       throw new InternalServerErrorException(
         'Failed to update product stock',
