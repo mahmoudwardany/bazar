@@ -61,8 +61,4 @@ export class OrdersController {
   async cancel(@Param('id') id: string, @CurrentUser() user: UserEntity) {
     return await this.ordersService.cancelOrder(+id, user);
   }
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ordersService.remove(+id);
-  }
 }
