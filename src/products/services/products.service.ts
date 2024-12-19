@@ -163,4 +163,45 @@ export class ProductsService {
       );
     }
   }
+
+  async findByCategoryId(categoryId: number): Promise<ProductEntity[]> {
+    return this.productRepository.find({
+      where: { categoryId },
+    });
+  }
+
+  async updateProductsByCategoryId(
+    categoryId: number,
+    category: CategoriesEntity,
+  ): Promise<void> {
+    const productsToUpdate = await this.findByCategoryId(categoryId);
+
+    if (productsToUpdate.length === 0) {
+      throw new NotFoundException('No products found for this category');
+    }
+
+    productsToUpdate.forEach((product) => {
+      product.category = category; // Set the new category
+    });
+
+    await this.productRepository.save(productsToUpdate);
+  }
+
+  async removeCategoryFromProductsByCategoryId(
+    categoryId: number,
+  ): Promise<void> {
+    const productsToUpdate = await this.productRepository.find({
+      where: { categoryId },
+    });
+
+    if (productsToUpdate.length === 0) {
+      throw new NotFoundException('No products found for this category');
+    }
+
+    productsToUpdate.forEach((product) => {
+      product.categoryId = null;
+    });
+
+    await this.productRepository.save(productsToUpdate);
+  }
 }

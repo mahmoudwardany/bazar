@@ -10,17 +10,20 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CategoriesEntity } from '../entities/category.entity';
 import * as cloudinary from 'cloudinary';
-import { ProductEntity } from '../../products/entities/product.entity';
+import { ProductsService } from '../../products/services/products.service';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(CategoriesEntity)
     private readonly categoriesRepository: Repository<CategoriesEntity>,
-    @InjectRepository(ProductEntity)
-    private readonly productRepository: Repository<ProductEntity>,
+    private readonly productService: ProductsService,
   ) {}
-  async create(createCategoryDto: CreateCategoryDto, imageFile) {
+
+  async create(
+    createCategoryDto: CreateCategoryDto,
+    imageFile: Express.Multer.File,
+  ) {
     const uploadedImage = await this.uploadImage(imageFile);
     const newCategory = this.categoriesRepository.create({
       ...createCategoryDto,
@@ -28,7 +31,8 @@ export class CategoriesService {
     });
     return await this.categoriesRepository.save(newCategory);
   }
-  async uploadImage(imageFile) {
+
+  async uploadImage(imageFile: Express.Multer.File) {
     try {
       const uploadedImage = await cloudinary.v2.uploader.upload(
         imageFile.path,
@@ -44,6 +48,7 @@ export class CategoriesService {
       );
     }
   }
+
   async findAll() {
     return await this.categoriesRepository.find();
   }
@@ -58,26 +63,23 @@ export class CategoriesService {
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
     const category = await this.findCategoryById(id);
-    const productsToUpdate = await this.productRepository.find({
-      where: { categoryId: category.id },
-    });
-    for (const product of productsToUpdate) {
-      product.category = category;
-      await this.productRepository.save(product);
-    }
+
     category.title = updateCategoryDto.title;
-    return await this.categoriesRepository.save(category);
+
+    await this.categoriesRepository.save(category);
+
+    await this.productService.updateProductsByCategoryId(category.id, category);
+
+    return category;
   }
 
   async removeCategory(id: number) {
     const category = await this.findCategoryById(id);
-    const productsToUpdate = await this.productRepository.find({
-      where: { categoryId: category.id },
-    });
-    for (const product of productsToUpdate) {
-      product.categoryId = null;
-      await this.productRepository.save(product);
-    }
+
+    await this.productService.removeCategoryFromProductsByCategoryId(
+      category.id,
+    );
+
     return await this.categoriesRepository.remove(category);
   }
 }

@@ -7,12 +7,11 @@ import { CategoriesEntity } from './entities/category.entity';
 import { MulterModule } from '@nestjs/platform-express';
 import { multerConfig } from 'src/utils/middleware/multer';
 import { ProductsModule } from 'src/products/products.module';
-import { ProductEntity } from 'src/products/entities/product.entity';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([CategoriesEntity, ProductEntity]),
+    TypeOrmModule.forFeature([CategoriesEntity]),
     MulterModule.register(multerConfig),
     forwardRef(() => ProductsModule),
   ],
