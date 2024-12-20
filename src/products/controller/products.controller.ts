@@ -42,7 +42,7 @@ export class ProductsController {
   }
 
   @Get()
-  @CacheTTL(600000)
+  @CacheTTL(86400000)
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
