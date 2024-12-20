@@ -17,6 +17,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthorizedGuard } from 'src/utils/guard/authorized-role.guard';
 import { Roles } from 'src/utils/common/Roles.enum';
 import { AuthenticationGuard } from 'src/utils/guard/auth.guard';
+import { CacheTTL } from '@nestjs/cache-manager';
 
 @Controller('categories')
 export class CategoriesController {
@@ -33,6 +34,7 @@ export class CategoriesController {
   }
 
   @Get()
+  @CacheTTL(86400000)
   findAll() {
     return this.categoriesService.findAll();
   }
