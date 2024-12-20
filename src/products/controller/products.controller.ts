@@ -21,6 +21,7 @@ import { AuthenticationGuard } from 'src/utils/guard/auth.guard';
 import { AuthorizedGuard } from 'src/utils/guard/authorized-role.guard';
 import { Roles } from 'src/utils/common/Roles.enum';
 import { ProductEntity } from '../entities/product.entity';
+import { CacheTTL } from '@nestjs/cache-manager';
 
 @Controller('products')
 export class ProductsController {
@@ -41,6 +42,7 @@ export class ProductsController {
   }
 
   @Get()
+  @CacheTTL(600000)
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
